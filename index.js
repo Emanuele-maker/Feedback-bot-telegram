@@ -235,7 +235,7 @@ const help = msg => {
 // command list
 api.on("message", msg => {
     if (msg.chat.id.toString() !== CHATID) return
-    if (msg.text.startsWith(".com")) 
+    if (msg.text.startsWith(".com")) help(msg)
     if (msg.text.startsWith("@feedback")) requestFeedback(msg)
     if (msg.text.startsWith(".addfeedback")) addFeedback(msg)
     if (msg.text.startsWith(".inf")) inf(msg)
