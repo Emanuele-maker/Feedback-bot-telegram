@@ -13,7 +13,9 @@ const feedbackRequests = []
 const currentUsersMessages = {}
 
 const registerUser = (id, username) => {
-    conn.query(`INSERT INTO users(id, username, feedbacks, verified) VALUES("${id}", "${username}", 0, false)`)
+    conn.query(`INSERT INTO users(id, username, feedbacks, verified) VALUES("${id}", "${username}", 0, false)`, err => {
+        if (err) console.error(err)
+    })
 }
 
 const requestFeedback = msg => {
@@ -25,6 +27,7 @@ const requestFeedback = msg => {
     if (firstTaggedUser.toLowerCase() === msg.from.username.toLowerCase()) api.sendMessage(CHATID, "Non puoi richiedere di aggiungere un feedback a te stesso!")
     else {
         conn.query("SELECT * FROM users", (err, dbUsers) => {
+            if (err) return console.error(err)
             const usersId = dbUsers.map(dbUser => {
                 return dbUser.id
             })
