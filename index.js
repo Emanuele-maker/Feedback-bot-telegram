@@ -264,7 +264,7 @@ const inf = msg => {
     firstTaggedUser = firstTaggedUser.replace("@", "")
     conn.query("SELECT * FROM users", (err, dbUsers) => {
         if (err) return console.error(err)
-        const user = dbUsers.find(u => u.username === firstTaggedUser)
+        const user = dbUsers.find(u => u.username.toLowerCase() === firstTaggedUser.toLowerCase())
         if (!user) return api.sendMessage(CHATID, "Questo utente non è registrato!")
         api.sendMessage(CHATID, `• Username: @${user.username}\n• ID: ${user.id}\n• Feedback: ${user.feedbacks}\n• Verificato dalla community di @MobopolyGoFastTrade: ${user.verified ? "Sì" : "No"}`)
     })
