@@ -2,7 +2,7 @@ const { Api, TelegramClient } = require("telegram")
 const { StringSession } = require("telegram/sessions")
 const input = require("input")
 
-const APID = process.env.TELEGRAM_API_ID
+const APID = Number(process.env.TELEGRAM_API_ID)
 const APIHASH = process.env.TELEGRAM_API_HASH
 const stringSession = new StringSession("1BAAOMTQ5LjE1NC4xNjcuOTEAUL7yaH++kQ7dNXQhKV258X7qyAQRpHBuZdvwhP67hoau9WxuYI+neepWxC7P7VExQUxuN1yLq2iGgwyxKufYFmTNoKWGSVEnA2JMJjO/jaV+RrJhq55RM5bax2RHdKkZs2kvOtFI9fUR/BovSvdiHAU+S3zF8aKHLAiuEuJ2P1SJ7/q+Rsm5Lit6uuJ2RGEBT6TxIIc1c5pjMCsm7mtGYYnzuC9sXtQLWRuKvQt0LtfpmPYauguAbFgs5b9iBfPspeUsYg5wG2TJeGcDSPANivpNoQaq/HCjESPO38FEnJO14hudXq74ND/wquGvbeIYeHU8fqbsNBMSOsUrwwAxa/M=")
 let client
