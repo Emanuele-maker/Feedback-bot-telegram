@@ -197,7 +197,7 @@ const addFeedback = msg => {
                         })
                     } else {
                         registerUser(fullUser.id, fullUser.username)
-                        conn.query(`UPDATE users SET feedbacks = 1 WHERE id = "${fullUser.id}"`, (err) => {
+                        conn.query(`UPDATE users SET feedbacks = ${numberOfFeedbacks} WHERE id = "${fullUser.id}"`, (err) => {
                             if (err) return console.error(err)
                             api.sendMessage(CHATID, `Aggiunto il primo feedback a @${fullUser.username}!`)
                         })
@@ -226,9 +226,16 @@ const inf = msg => {
     })
 }
 
+const help = msg => {
+    api.sendMessage(CHATID, `• <b>.verifica</b>: usalo per verificare un utente. Sintassi: .verifica @username (Esclusivo per gli <b>admin</b>)\n• <b>.addfeedback</b>: usalo per aggiungere feedback a un utente. Sintassi: .addfeedback @username numero_feedback. (Esclusivo per gli <b>admin</b>)\n• <b>@feedback</b>: usalo per richiedere agli admin di aggiungere un feedback a un utente dopo uno scambio. Sintassi: @feedback @username messaggio.\n• <b>.verificati</b>: usalo per vedere la lista di utenti verificati nel gruppo.\n• <b>.inf</b>: usalo per vedere le informazioni di un utente. Sintassi: .inf @username`, {
+        parse_mode: "HTML"
+    })
+}
+
 // command list
 api.on("message", msg => {
     if (msg.chat.id.toString() !== CHATID) return
+    if (msg.text.startsWith(".com")) 
     if (msg.text.startsWith("@feedback")) requestFeedback(msg)
     if (msg.text.startsWith(".addfeedback")) addFeedback(msg)
     if (msg.text.startsWith(".inf")) inf(msg)
