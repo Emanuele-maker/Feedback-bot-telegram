@@ -1,6 +1,7 @@
 const { Api, TelegramClient } = require("telegram")
 const { StringSession } = require("telegram/sessions")
 const input = require("input")
+require("dotenv").config()
 
 const APID = Number(process.env.TELEGRAM_API_ID)
 const APIHASH = process.env.TELEGRAM_API_HASH

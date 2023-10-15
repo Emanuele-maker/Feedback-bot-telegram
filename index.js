@@ -6,7 +6,7 @@ require("dotenv").config()
 
 const TOKEN = process.env.BOT_TOKEN
 const CHATID = process.env.NODE_ENV === "development" ? process.env.DEV_CHAT_ID : process.env.CHAT_ID
-const ADMINCHATID = process.env.ADMIN_CHAT_ID
+const ADMINCHATID = "-1001970824240"
 const api = new TelegramBot(TOKEN, { polling: true })
 
 const feedbackRequests = []
@@ -172,13 +172,13 @@ const addFeedback = msg => {
         .then(member => {
             if (!adminsId.includes(member.user.id)) return api.sendMessage(CHATID, "Solo gli admin possono eseguire questo comando!")
             let firstTaggedUser = msg.text.trim().replace(".addfeedback", "").split(" ").find(word => word.startsWith("@"))?.replace("undefined", "")
-            let numberOfFeedbacks = parseInt(msg.text.match(/\d+/g).join(""))
             if (!firstTaggedUser || firstTaggedUser.length < 1 || !firstTaggedUser.startsWith("@")) {
                 if (msg.reply_to_message?.from?.username !== undefined) firstTaggedUser = msg.reply_to_message.from.username
                 else return api.sendMessage(CHATID, "Per favore, utilizza la sintassi corretta: .addfeedback @username numero_di_feedback.\nEsempio: .addfeedback <code>@Giuggetto</code> <code>1</code>", {
                     parse_mode: "HTML"
                 })
             }
+            let numberOfFeedbacks = parseInt(msg.text.replace(firstTaggedUser, "").match(/\d+/).join(""))
             if (typeof numberOfFeedbacks !== "number" || numberOfFeedbacks < 1) numberOfFeedbacks = 1
             firstTaggedUser = firstTaggedUser.replace("@", "")
             getFullUser(firstTaggedUser)
@@ -199,8 +199,52 @@ const addFeedback = msg => {
                         registerUser(fullUser.id, fullUser.username)
                         conn.query(`UPDATE users SET feedbacks = ${numberOfFeedbacks} WHERE id = "${fullUser.id}"`, (err) => {
                             if (err) return console.error(err)
-                            api.sendMessage(CHATID, `Aggiunto il primo feedback a @${fullUser.username}!`)
+                            if (numberOfFeedbacks === 1) api.sendMessage(CHATID, `Aggiunto un feedback a @${fullUser.username}`)
+                            else if (numberOfFeedbacks > 1) api.sendMessage(CHATID, `Aggiunti ${numberOfFeedbacks} feedback a @${fullUser.username}`)
                         })
+                    }
+                })
+            })
+        })
+    })
+}
+
+const delFeedback = msg => {
+    api.getChatAdministrators(CHATID)
+    .then(admins => {
+        const adminsId = admins.map(admin => {
+            return admin.user.id
+        })
+        api.getChatMember(CHATID, msg.from.id)
+        .then(member => {
+            if (!adminsId.includes(member.user.id)) return api.sendMessage(CHATID, "Solo gli admin possono eseguire questo comando!")
+            let firstTaggedUser = msg.text.trim().replace(".delfeedback", "").split(" ").find(word => word.startsWith("@"))?.replace("undefined", "")
+            if (!firstTaggedUser || firstTaggedUser.length < 1 || !firstTaggedUser.startsWith("@")) {
+                if (msg.reply_to_message?.from?.username !== undefined) firstTaggedUser = msg.reply_to_message.from.username
+                else return api.sendMessage(CHATID, "Per favore, utilizza la sintassi corretta: .delfeedback @username numero_di_feedback.\nEsempio: .delfeedback <code>@Giuggetto</code> <code>1</code>", {
+                    parse_mode: "HTML"
+                })
+            }
+            let numberOfFeedbacks = parseInt(msg.text.replace(firstTaggedUser, "").match(/\d+/).join(""))
+            if (typeof numberOfFeedbacks !== "number" || numberOfFeedbacks < 1) numberOfFeedbacks = 1
+            firstTaggedUser = firstTaggedUser.replace("@", "")
+            getFullUser(firstTaggedUser)
+            .then(fullUser => {
+                conn.query("SELECT * FROM users", (err, dbUsers) => {
+                    if (err) return console.error(err)
+                    const usersId = dbUsers.map(dbUser => {
+                        return dbUser.id
+                    })
+                    if (usersId.includes(fullUser.id.toString())) {
+                        const currentUsersFeedbacks = dbUsers.find(u => u.id === fullUser.id.toString()).feedbacks
+                        if (currentUsersFeedbacks < numberOfFeedbacks) return api.sendMessage(CHATID, `Non puoi rimuovere ${numberOfFeedbacks} feedback a questo utente perchè ne ha solo ${currentUsersFeedbacks}!`)
+                        conn.query(`UPDATE users SET feedbacks = ${currentUsersFeedbacks - numberOfFeedbacks} WHERE id = "${fullUser.id}"`, (err) => {
+                            if (err) return console.error(err)
+                            if (numberOfFeedbacks === 1) api.sendMessage(CHATID, `Rimosso un feedback a @${fullUser.username}`)
+                            else if (numberOfFeedbacks > 1) api.sendMessage(CHATID, `RImossi ${numberOfFeedbacks} feedback a @${fullUser.username}`)
+                        })
+                    } else {
+                        api.sendMessage(CHATID, "Questo utente non è registrato!")
                     }
                 })
             })
@@ -227,17 +271,18 @@ const inf = msg => {
 }
 
 const help = msg => {
-    api.sendMessage(CHATID, `• <b>.verifica</b>: usalo per verificare un utente. Sintassi: .verifica @username (Esclusivo per gli <b>admin</b>)\n• <b>.addfeedback</b>: usalo per aggiungere feedback a un utente. Sintassi: .addfeedback @username numero_feedback. (Esclusivo per gli <b>admin</b>)\n• <b>@feedback</b>: usalo per richiedere agli admin di aggiungere un feedback a un utente dopo uno scambio. Sintassi: @feedback @username messaggio.\n• <b>.verificati</b>: usalo per vedere la lista di utenti verificati nel gruppo.\n• <b>.inf</b>: usalo per vedere le informazioni di un utente. Sintassi: .inf @username`, {
+    api.sendMessage(CHATID, `<b>LISTA DEI COMANDI DEL FEEDBACK BOT</b>\n\n• <b>.verifica</b>: usalo per verificare un utente. Sintassi: .verifica @username (Esclusivo per gli <b>admin</b>)\n• <b>.addfeedback</b>: usalo per aggiungere feedback a un utente. Sintassi: .addfeedback @username numero_feedback. (Esclusivo per gli <b>admin</b>)\n• <b>.delfeedback</b>: usalo per rimuovere dei feedback a un utente. Sintassi: .delfeedback @username numero_feedback (Esclusivo per gli <b>admin</b>)\n• <b>@feedback</b>: usalo per richiedere agli admin di aggiungere un feedback a un utente dopo uno scambio e allega una prova di quest'ultimo. Sintassi: @feedback @username messaggio\n• <b>.verificati</b>: usalo per vedere la lista di utenti verificati nel gruppo.\n• <b>.inf</b>: usalo per vedere le informazioni di un utente. Sintassi: .inf @username`, {
         parse_mode: "HTML"
     })
 }
 
 // command list
 api.on("message", msg => {
-    if (msg.chat.id.toString() !== CHATID) return
+    if (msg.chat.id.toString() !== CHATID) return console.log("different chat id!!!")
     if (msg.text.startsWith(".com")) help(msg)
     if (msg.text.startsWith("@feedback")) requestFeedback(msg)
     if (msg.text.startsWith(".addfeedback")) addFeedback(msg)
+    if (msg.text.startsWith(".delfeedback")) delFeedback(msg)
     if (msg.text.startsWith(".inf")) inf(msg)
     if (msg.text.startsWith(".unverifica")) unverifica(msg)
     if (msg.text.startsWith(".verificati")) getVerifedUsersList(msg)
